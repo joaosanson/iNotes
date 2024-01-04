@@ -1,9 +1,19 @@
-import { HomeContainer } from "./styles"
+import { Header } from "../../components/Header"
+import { Brand, Container, Content, Menu, NewNote, Search } from "./styles"
 
 export function Home() {
   return (
-    <HomeContainer>
-      <h1>home</h1>
-    </HomeContainer>
+    <Container>
+      <Brand to='/home'>
+        <h1>iNotes</h1>
+      </Brand>
+
+      <Header></Header>
+      <Menu></Menu>
+      <Search></Search>
+      <Content></Content>
+      <NewNote></NewNote>
+
+    </Container>
   )
 }
