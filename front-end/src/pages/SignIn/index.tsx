@@ -25,7 +25,9 @@ export function SignIn() {
             icon={FiLock}
           />
 
-          <Button title='Entrar' />
+          <Button
+            title='Entrar'
+          />
 
           <Link to="/register">
             Criar conta
