@@ -3,13 +3,9 @@ import { Link } from "react-router-dom";
 
 import { Input } from "../../components/Input";
 import { Container, Form } from "./styles";
-import { useState } from "react";
 import { Button } from "../../components/Button";
 
 export function SignIn() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-
   return (
     <Container>
       <Form>
@@ -21,14 +17,12 @@ export function SignIn() {
             placeholder="E-mail"
             type="text"
             icon={FiMail}
-            onChange={e => setEmail(e.target.value)}
           />
 
           <Input 
             placeholder="Senha"
             type="password"
             icon={FiLock}
-            onChange={e => setPassword(e.target.value)}
           />
 
           <Button title='Entrar' />
