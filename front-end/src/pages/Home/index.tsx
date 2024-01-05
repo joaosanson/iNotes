@@ -8,7 +8,7 @@ export function Home() {
         <h1>iNotes</h1>
       </Brand>
 
-      <Header></Header>
+      <Header />
       <Menu></Menu>
       <Search></Search>
       <Content></Content>
