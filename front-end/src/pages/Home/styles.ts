@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import styled from "styled-components";
 
 export const Container = styled.div`
-  width: 100%;
+  max-width: 100%;
   height: 100vh;
   display: grid;
   grid-template-columns: 25rem auto;
@@ -17,31 +17,33 @@ export const Container = styled.div`
 
 export const Brand = styled(Link)`
   grid-area: brand;
-  border: 1px solid white;
   display: flex;
   justify-content: center;
   align-items: center;
   text-decoration: none;
   color: ${(props) => props.theme['GREEN']};
   font-family: 'Roboto Mono', monospace;
+  background-color: ${(props) => props.theme['BACKGROUND_800']};
 `
 
 export const Menu = styled.ul`
   grid-area: menu;
-  border: 1px solid white;
+  background-color: ${(props) => props.theme['BACKGROUND_800']};
 `
 
 export const Search = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
   grid-area: search;
-  border: 1px solid white;
+  margin: 0 6.4rem;
 `
 
 export const Content = styled.div`
   grid-area: content;
-  border: 1px solid white;
 `
 
 export const NewNote = styled(Link)`
   grid-area: newnote;
-  border: 1px solid white;
+  background-color: ${(props) => props.theme['BACKGROUND_800']};
 `

@@ -1,4 +1,5 @@
 import { Header } from "../../components/Header"
+import { Input } from "../../components/Input"
 import { Brand, Container, Content, Menu, NewNote, Search } from "./styles"
 
 export function Home() {
@@ -10,7 +11,11 @@ export function Home() {
 
       <Header />
       <Menu></Menu>
-      <Search></Search>
+      <Search>
+        <Input 
+          placeholder="Pequisar pelo título"
+        />
+      </Search>
       <Content></Content>
       <NewNote></NewNote>
 
