@@ -23,12 +23,10 @@ export const Brand = styled(Link)`
   text-decoration: none;
   color: ${(props) => props.theme['GREEN']};
   font-family: 'Roboto Mono', monospace;
-  background-color: ${(props) => props.theme['BACKGROUND_800']};
 `
 
 export const Menu = styled.ul`
   grid-area: menu;
-  background-color: ${(props) => props.theme['BACKGROUND_800']};
 `
 
 export const Search = styled.div`
@@ -36,11 +34,14 @@ export const Search = styled.div`
   align-items: center;
   justify-content: center;
   grid-area: search;
-  margin: 0 6.4rem;
+  padding: 0 6.4rem;
+  background-color: ${(props) => props.theme['GREY_700']};
 `
 
 export const Content = styled.div`
   grid-area: content;
+  background-color: ${(props) => props.theme['GREY_700']};
+
 `
 
 export const NewNote = styled(Link)`

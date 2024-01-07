@@ -12,10 +12,9 @@ export const GlobalStyles = createGlobalStyle`
   }
 
   body {
-    max-width: 144rem;
-    margin: 0 auto;
+    width: 100%;
     height: 100vh;
-    background-color: ${(props) => props.theme['GREY_700']};
+    background-color: ${(props) => props.theme['BACKGROUND_800']};
     color: ${(props) => props.theme['WHITE']};
     font-weight: 400;
     font-size: 1.6rem;

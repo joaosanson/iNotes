@@ -9,6 +9,8 @@ export const Container = styled.header`
   align-items: center;
   justify-content: space-between;
   padding: 0 6rem 0 11.5rem;
+  background-color: ${(props) => props.theme['GREY_700']};
+
 `
 
 export const Profile = styled(Link)`
