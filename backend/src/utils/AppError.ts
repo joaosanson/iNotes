@@ -12,8 +12,6 @@ export const errorHandler = (
   if (validationError.name === 'ZodValidationError') {
     reply.status(400).send(validationError.toString())
   } else {
-    const validationError = fromZodError(error)
-
     reply.status(500).send(validationError.toString())
   }
 }
