@@ -1,14 +1,19 @@
-import fastify from 'fastify'
-import { app } from '../app'
+import { FastifyReply, FastifyRequest } from 'fastify'
+import * as z from 'zod'
+import { fromZodError } from 'zod-validation-error'
 
-app.setErrorHandler((error, request, reply) => {
-  if (error instanceof fastify.errorCodes.FST_ERR_BAD_STATUS_CODE) {
-    // Log error
-    console.error(error)
-    // Send error response
-    reply.status(500).send({ ok: false })
+export const errorHandler = (
+  error: z.ZodError,
+  request: FastifyRequest,
+  reply: FastifyReply,
+) => {
+  const validationError = fromZodError(error)
+
+  if (validationError.name === 'ZodValidationError') {
+    reply.status(400).send(validationError.toString())
   } else {
-    // fastify will use parent error handler to handle this
-    reply.send(error)
+    const validationError = fromZodError(error)
+
+    reply.status(500).send(validationError.toString())
   }
-})
+}
