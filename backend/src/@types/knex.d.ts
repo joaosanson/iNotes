@@ -8,6 +8,7 @@ declare module 'knex/types/tables' {
       name: string
       email: string
       password: string
+      created_at?: Date
       updated_at?: Date
     }
     notes: {
@@ -15,6 +16,7 @@ declare module 'knex/types/tables' {
       title: string
       description: string
       user_id: string
+      created_at?: Date
       updated_at?: Date
     }
     tags: {

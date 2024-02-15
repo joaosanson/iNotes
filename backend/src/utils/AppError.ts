@@ -21,6 +21,7 @@ export const errorHandler = (
     }
   } else {
     switch (error.message) {
+      case 'Tag not found.':
       case 'Note not found.':
       case 'User not found.':
         error.statusCode = 404
