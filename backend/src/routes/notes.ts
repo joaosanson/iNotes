@@ -5,9 +5,78 @@ import { z } from 'zod'
 
 export async function notesRoutes(app: FastifyInstance) {
   app.get('/', async (request, reply) => {
-    const notes = await knex('notes').select()
+    const getNotesQuerySchema = z.object({
+      userId: z.string().uuid(),
+      title: z.string().optional(),
+      description: z.string().optional(),
+      tags: z.string().optional(),
+    })
 
-    reply.send(notes)
+    const { userId, title, description, tags } = getNotesQuerySchema.parse(
+      request.query,
+    )
+
+    if (tags) {
+      const NoteSchemaObject = z.object({
+        id: z.string().uuid(),
+        title: z.string(),
+        user_id: z.string(),
+      })
+
+      const NoteSchema = z.array(NoteSchemaObject)
+      const filterTags = tags.split(',').map((tag) => tag.trim())
+
+      const tagsKnexQuery = knex('tags')
+        .select(['notes.id', 'notes.title', 'notes.user_id'])
+        .where('notes.user_id', userId)
+        .whereIn('name', filterTags)
+        .innerJoin('notes', 'notes.id', 'tags.note_id')
+
+      if (title) {
+        tagsKnexQuery
+          .whereLike('notes.title', `%${title}%`)
+          .orderBy('notes.title')
+      }
+
+      if (description) {
+        tagsKnexQuery.whereLike('notes.description', `%${description}%`)
+      }
+
+      const notesFromKnex = await tagsKnexQuery
+
+      const notes = NoteSchema.parse(notesFromKnex)
+
+      const userTags = await knex('tags').where({ user_id: userId })
+      const notesWithTags = notes.map((note) => {
+        const noteTags = userTags.filter((tag) => tag.note_id === note.id)
+
+        return {
+          ...note,
+          tags: noteTags,
+        }
+      })
+
+      reply.send(notesWithTags)
+    } else {
+      try {
+        const notesKnexQuery = knex('notes')
+          .select()
+          .where({ user_id: userId })
+          .orderBy('created_at')
+
+        if (title) {
+          notesKnexQuery.whereLike('title', `%${title}%`)
+        }
+        if (description) {
+          notesKnexQuery.whereLike('description', `%${description}%`)
+        }
+        // console.log('Knex Query:', notesKnexQuery.toString())
+        const notes = await notesKnexQuery.orderBy('created_at')
+        reply.send(notes)
+      } catch (error) {
+        throw new Error()
+      }
+    }
   })
 
   app.get('/:id', async (request, reply) => {
@@ -17,11 +86,25 @@ export async function notesRoutes(app: FastifyInstance) {
 
     const { id } = getNotesParamsSchema.parse(request.params)
 
-    const notes = await knex('notes').select().where({ id })
-    if (notes.length === 0) {
+    let notes
+
+    try {
+      notes = await knex('notes').select().where({ id }).first()
+    } catch (err) {
       throw Error('Note not found.')
     }
-    reply.send(notes)
+
+    const tags = await knex('tags')
+      .select()
+      .where({ note_id: id })
+      .orderBy('name')
+
+    const links = await knex('links')
+      .select()
+      .where({ note_id: id })
+      .orderBy('created_at')
+
+    reply.send({ ...notes, tags, links })
   })
 
   app.post('/:id', async (request, reply) => {
@@ -74,5 +157,23 @@ export async function notesRoutes(app: FastifyInstance) {
     await knex('tags').insert(tagsInsert)
 
     reply.status(201).send()
+  })
+
+  app.delete('/:id', async (request, reply) => {
+    const getUsersParamsSchema = z.object({
+      id: z.string().uuid(),
+    })
+
+    const { id } = getUsersParamsSchema.parse(request.params)
+
+    const note = await knex('notes').select().where({ id })
+
+    if (note.length === 0) {
+      throw Error('Note not found.')
+    }
+
+    await knex('notes').delete().where({ id })
+
+    reply.status(200).send('Note deleted successfully.')
   })
 }
