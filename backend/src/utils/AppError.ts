@@ -21,6 +21,7 @@ export const errorHandler = (
     }
   } else {
     switch (error.message) {
+      case 'Note not found.':
       case 'User not found.':
         error.statusCode = 404
         reply.status(error.statusCode).send(error)
