@@ -10,5 +10,23 @@ declare module 'knex/types/tables' {
       password: string
       updated_at?: Date
     }
+    notes: {
+      id: string
+      title: string
+      description: string
+      user_id: string
+      updated_at?: Date
+    }
+    tags: {
+      id: string
+      name: string
+      user_id: string
+      note_id: string
+    }
+    links: {
+      id: string
+      url: string
+      note_id: string
+    }
   }
 }
