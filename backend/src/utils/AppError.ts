@@ -21,6 +21,18 @@ export const errorHandler = (
     }
   } else {
     switch (error.message) {
+      case 'Password incorrect.':
+      case 'Old password must be informed to change current password.':
+        error.statusCode = 400
+        reply.status(error.statusCode).send(error)
+        break
+
+      case 'Email and/or password incorrect.':
+        error.statusCode = 401
+        reply.status(error.statusCode).send(error)
+        break
+
+      case 'One of the fields must be defined.':
       case 'Tag not found.':
       case 'Note not found.':
       case 'User not found.':
@@ -28,23 +40,8 @@ export const errorHandler = (
         reply.status(error.statusCode).send(error)
         break
 
-      case 'Old password must be informed to change current password.':
-        error.statusCode = 400
-        reply.status(error.statusCode).send(error)
-        break
-
-      case 'Password incorrect.':
-        error.statusCode = 400
-        reply.status(error.statusCode).send(error)
-        break
-
       case 'Email already in use.':
         error.statusCode = 409
-        reply.status(error.statusCode).send(error)
-        break
-
-      case 'One of the fields must be defined.':
-        error.statusCode = 404
         reply.status(error.statusCode).send(error)
         break
 
