@@ -1,5 +1,6 @@
 import { knex as setupKnex, Knex } from 'knex'
 import { env } from './env'
+import { Database } from 'sqlite3'
 
 export const config: Knex.Config = {
   client: env.DATABASE_CLIENT,
@@ -8,7 +9,9 @@ export const config: Knex.Config = {
   },
   useNullAsDefault: true,
   pool: {
-    afterCreate: (conn, cb) => conn.run('PRAGMA foreign_keys = ON', cb),
+    // @ts-expect-error no way of typing cb
+    afterCreate: (conn: Database, cb) =>
+      conn.run('PRAGMA foreign_keys = ON', cb),
   },
   migrations: {
     extension: 'ts',

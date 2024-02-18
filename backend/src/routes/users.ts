@@ -3,28 +3,44 @@ import { z } from 'zod'
 import { knex } from '../database'
 import crypto from 'node:crypto'
 import { hash, compare } from 'bcrypt'
+import { ensureAuth } from '../middlewares/ensureAuth'
+import { CustomFastifyRequest } from '../@types/fastify'
 
 export async function usersRoutes(app: FastifyInstance) {
-  app.get('/', async (request, reply) => {
+  app.get('/', { preHandler: [ensureAuth] }, async (request, reply) => {
     const users = await knex('users').select()
 
     reply.send(users)
   })
 
-  app.get('/:id', async (request, reply) => {
-    const getUsersParamsSchema = z.object({
-      id: z.string().uuid(),
-    })
+  app.get(
+    '/:id',
+    { preHandler: [ensureAuth] },
+    async (request: CustomFastifyRequest, reply) => {
+      const getUsersParamsSchema = z.object({
+        id: z.string().uuid(),
+      })
 
-    const { id } = getUsersParamsSchema.parse(request.params)
+      const { id } = getUsersParamsSchema.parse(request.params)
 
-    const user = await knex('users').select().where({ id })
+      const getUserSchema = z.object({
+        id: z.string().uuid(),
+      })
 
-    if (user.length === 0) {
-      throw new Error('User not found.')
-    }
-    reply.send(user)
-  })
+      const { id: userId } = getUserSchema.parse(request.params)
+
+      if (id !== userId) {
+        reply.status(401).send()
+      }
+
+      const user = await knex('users').select().where({ id })
+
+      if (user.length === 0) {
+        throw new Error('User not found.')
+      }
+      reply.send(user)
+    },
+  )
 
   app.post('/', async (request, reply) => {
     const createUsersBodySchema = z.object({
@@ -51,86 +67,94 @@ export async function usersRoutes(app: FastifyInstance) {
     reply.status(201).send({ message: 'User created successfully!' })
   })
 
-  app.put('/:id', async (request, reply) => {
-    const getUsersParamsSchema = z.object({
-      id: z.string().uuid(),
-    })
-
-    const getUsersBodySchema = z
-      .object({
-        name: z.string(),
-        email: z.string(),
-        password: z.string(),
-        oldPassword: z.string(),
+  app.put(
+    '/',
+    { preHandler: [ensureAuth] },
+    async (request: CustomFastifyRequest, reply) => {
+      const getUserSchema = z.object({
+        id: z.string().uuid(),
       })
-      .partial()
 
-    const body = getUsersBodySchema.parse(request.body)
+      const getUsersBodySchema = z
+        .object({
+          name: z.string(),
+          email: z.string(),
+          password: z.string(),
+          oldPassword: z.string(),
+        })
+        .partial()
 
-    if (Object.keys(body).length === 0) {
-      throw new Error('One of the fields must be defined.')
-    }
+      const body = getUsersBodySchema.parse(request.body)
 
-    const { id } = getUsersParamsSchema.parse(request.params)
-    const user = await knex('users').select().where({ id }).first()
-
-    if (!user) {
-      throw new Error('User not found.')
-    }
-
-    if (body.email) {
-      const { email } = body
-      const checkEmail = await knex('users')
-        .select()
-        .where({ email })
-        .andWhereNot({ id })
-
-      if (Object.keys(checkEmail).length > 0) {
-        throw Error('Email already in use.')
+      if (Object.keys(body).length === 0) {
+        throw new Error('One of the fields must be defined.')
       }
-    }
-    if (body.password && !body.oldPassword) {
-      throw new Error(
-        'Old password must be informed to change current password.',
-      )
-    }
 
-    if (body.password && body.oldPassword) {
-      const checkOldPassword = await compare(body.oldPassword, user.password)
-      if (!checkOldPassword) {
-        throw new Error('Password incorrect.')
+      const { id } = getUserSchema.parse(request.user)
+      const user = await knex('users').select().where({ id }).first()
+
+      if (!user) {
+        throw new Error('User not found.')
       }
-      const hashedPassword = await hash(body.password, 8)
-      body.password = hashedPassword
-    }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { oldPassword, ...bodyWithoutOldPassword } = body
+      if (body.email) {
+        const { email } = body
+        const checkEmail = await knex('users')
+          .select()
+          .where({ email })
+          .andWhereNot({ id })
 
-    await knex('users')
-      .update({ ...bodyWithoutOldPassword, updated_at: knex.fn.now() })
-      .where({ id })
+        if (Object.keys(checkEmail).length > 0) {
+          throw Error('Email already in use.')
+        }
+      }
+      if (body.password && !body.oldPassword) {
+        throw new Error(
+          'Old password must be informed to change current password.',
+        )
+      }
 
-    reply.send()
-  })
+      if (body.password && body.oldPassword) {
+        const checkOldPassword = await compare(body.oldPassword, user.password)
+        if (!checkOldPassword) {
+          throw new Error('Password incorrect.')
+        }
+        const hashedPassword = await hash(body.password, 8)
+        body.password = hashedPassword
+      }
 
-  app.delete('/:id', async (request, reply) => {
-    const getUsersParamsSchema = z.object({
-      id: z.string().uuid(),
-    })
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { oldPassword, ...bodyWithoutOldPassword } = body
 
-    const { id } = getUsersParamsSchema.parse(request.params)
+      await knex('users')
+        .update({ ...bodyWithoutOldPassword, updated_at: knex.fn.now() })
+        .where({ id })
 
-    const user = await knex('users').select().where({ id })
+      reply.send()
+    },
+  )
 
-    if (user.length === 0) {
-      throw Error('User not found.')
-    }
+  app.delete(
+    '/',
+    { preHandler: [ensureAuth] },
+    async (request: CustomFastifyRequest, reply) => {
+      const getUserSchema = z.object({
+        id: z.string().uuid(),
+      })
 
-    await knex('users').delete().where({ id })
+      const { id } = getUserSchema.parse(request.user)
 
-    reply.status(200).send({
-      message: 'User deleted successfully.',
-    })
-  })
+      const user = await knex('users').select().where({ id })
+
+      if (user.length === 0) {
+        throw Error('User not found.')
+      }
+
+      await knex('users').delete().where({ id })
+
+      reply.status(200).send({
+        message: 'User deleted successfully.',
+      })
+    },
+  )
 }

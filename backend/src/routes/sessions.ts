@@ -1,7 +1,9 @@
 import { FastifyInstance } from 'fastify'
+import { auth } from '../config/auth'
 import { z } from 'zod'
 import { knex } from '../database'
 import { compare } from 'bcrypt'
+import { sign } from 'jsonwebtoken'
 
 export async function sessionsRoutes(app: FastifyInstance) {
   app.post('/', async (request, reply) => {
@@ -24,6 +26,12 @@ export async function sessionsRoutes(app: FastifyInstance) {
       throw Error('Email and/or password incorrect.')
     }
 
-    reply.send({ user, email, password })
+    const { secret, expiresIn } = auth.jwt
+    const token = sign({}, secret, {
+      subject: String(user.id),
+      expiresIn,
+    })
+
+    reply.send({ user, token })
   })
 }

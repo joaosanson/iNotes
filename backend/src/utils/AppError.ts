@@ -27,6 +27,8 @@ export const errorHandler = (
         reply.status(error.statusCode).send(error)
         break
 
+      case 'JWT Token not informed.':
+      case 'Invalid JWT Token.':
       case 'Email and/or password incorrect.':
         error.statusCode = 401
         reply.status(error.statusCode).send(error)

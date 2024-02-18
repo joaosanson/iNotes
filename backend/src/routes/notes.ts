@@ -2,17 +2,26 @@ import { FastifyInstance } from 'fastify'
 import { knex } from '../database'
 import crypto from 'node:crypto'
 import { z } from 'zod'
+import { CustomFastifyRequest } from '../@types/fastify'
+import { ensureAuth } from '../middlewares/ensureAuth'
 
 export async function notesRoutes(app: FastifyInstance) {
-  app.get('/', async (request, reply) => {
+  app.addHook('preHandler', ensureAuth)
+
+  app.get('/', async (request: CustomFastifyRequest, reply) => {
     const getNotesQuerySchema = z.object({
-      userId: z.string().uuid(),
       title: z.string().optional(),
       description: z.string().optional(),
       tags: z.string().optional(),
     })
 
-    const { userId, title, description, tags } = getNotesQuerySchema.parse(
+    const getUserSchema = z.object({
+      id: z.string().uuid(),
+    })
+
+    const { id: userId } = getUserSchema.parse(request.user)
+
+    const { title, description, tags } = getNotesQuerySchema.parse(
       request.query,
     )
 
@@ -107,24 +116,22 @@ export async function notesRoutes(app: FastifyInstance) {
     reply.send({ ...notes, tags, links })
   })
 
-  app.post('/:id', async (request, reply) => {
+  app.post('/', async (request: CustomFastifyRequest, reply) => {
     const createNotesBodySchema = z.object({
       title: z.string(),
       description: z.string(),
       tags: z.string().array(),
       links: z.string().array(),
     })
+    const getUserSchema = z.object({
+      id: z.string().uuid(),
+    })
 
     const { title, description, tags, links } = createNotesBodySchema.parse(
       request.body,
     )
 
-    const getNotesParamsSchema = z.object({
-      id: z.string().uuid(),
-    })
-
-    const params = getNotesParamsSchema.parse(request.params)
-    const userId = params.id
+    const { id: userId } = getUserSchema.parse(request.user)
 
     const noteId = crypto.randomUUID()
 
