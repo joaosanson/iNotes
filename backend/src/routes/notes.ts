@@ -88,18 +88,25 @@ export async function notesRoutes(app: FastifyInstance) {
     }
   })
 
-  app.get('/:id', async (request, reply) => {
+  app.get('/:id', async (request: CustomFastifyRequest, reply) => {
+    const getUserSchema = z.object({
+      id: z.string().uuid(),
+    })
+
     const getNotesParamsSchema = z.object({
       id: z.string().uuid(),
     })
 
     const { id } = getNotesParamsSchema.parse(request.params)
 
-    let notes
+    const { id: userId } = getUserSchema.parse(request.user)
 
-    try {
-      notes = await knex('notes').select().where({ id }).first()
-    } catch (err) {
+    const notes = await knex('notes')
+      .select()
+      .where({ id, user_id: userId })
+      .first()
+
+    if (notes === undefined || Object.values(notes).length === 0) {
       throw Error('Note not found.')
     }
 
@@ -166,14 +173,20 @@ export async function notesRoutes(app: FastifyInstance) {
     reply.status(201).send()
   })
 
-  app.delete('/:id', async (request, reply) => {
+  app.delete('/:id', async (request: CustomFastifyRequest, reply) => {
+    const getUserSchema = z.object({
+      id: z.string().uuid(),
+    })
+
     const getUsersParamsSchema = z.object({
       id: z.string().uuid(),
     })
 
     const { id } = getUsersParamsSchema.parse(request.params)
 
-    const note = await knex('notes').select().where({ id })
+    const { id: userId } = getUserSchema.parse(request.user)
+
+    const note = await knex('notes').select().where({ id, user_id: userId })
 
     if (note.length === 0) {
       throw Error('Note not found.')
