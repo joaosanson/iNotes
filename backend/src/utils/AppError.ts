@@ -21,6 +21,7 @@ export const errorHandler = (
     }
   } else {
     switch (error.message) {
+      case 'Multipart avatar not informed.':
       case 'Password incorrect.':
       case 'Old password must be informed to change current password.':
         error.statusCode = 400
@@ -35,6 +36,7 @@ export const errorHandler = (
         break
 
       case 'One of the fields must be defined.':
+      case 'Filename not provided.':
       case 'Tag not found.':
       case 'Note not found.':
       case 'User not found.':

@@ -5,6 +5,9 @@ import crypto from 'node:crypto'
 import { hash, compare } from 'bcrypt'
 import { ensureAuth } from '../middlewares/ensureAuth'
 import { CustomFastifyRequest } from '../@types/fastify'
+import multer from 'fastify-multer'
+import { MULTER } from '../config/upload'
+import { DiskStorage } from '../providers/DiskStorage'
 
 export async function usersRoutes(app: FastifyInstance) {
   app.get('/', { preHandler: [ensureAuth] }, async (request, reply) => {
@@ -131,6 +134,38 @@ export async function usersRoutes(app: FastifyInstance) {
         .where({ id })
 
       reply.send()
+    },
+  )
+
+  app.register(multer.contentParser)
+  const upload = multer(MULTER)
+  app.patch(
+    '/avatar',
+    { preHandler: [upload.single('avatar'), ensureAuth] },
+    async (request: CustomFastifyRequest, reply) => {
+      if (!request.file) {
+        throw Error('Multipart avatar not informed.')
+      }
+      // @ts-expect-error we are making sure user.id is being informed by ensureAuth middleware
+      const userId = request.user.id
+      const avatarFilename = request.file.filename
+
+      const diskStorage = new DiskStorage()
+
+      const user = await knex('users').where({ id: userId }).first()
+      if (!user) {
+        throw Error('User not found.')
+      }
+      if (user.avatar) {
+        await diskStorage.deleteFile(user.avatar)
+      }
+
+      const filename = await diskStorage.saveFile(avatarFilename)
+      user.avatar = filename
+
+      await knex('users').update(user).where({ id: userId })
+
+      reply.send(user)
     },
   )
 
