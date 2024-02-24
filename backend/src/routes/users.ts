@@ -10,31 +10,20 @@ import { MULTER } from '../config/upload'
 import { DiskStorage } from '../providers/DiskStorage'
 
 export async function usersRoutes(app: FastifyInstance) {
-  app.get('/', { preHandler: [ensureAuth] }, async (request, reply) => {
-    const users = await knex('users').select()
+  // app.get('/', async (request, reply) => {
+  //   const users = await knex('users').select()
 
-    reply.send(users)
-  })
+  //   reply.send(users)
+  // })
 
   app.get(
-    '/:id',
+    '/',
     { preHandler: [ensureAuth] },
     async (request: CustomFastifyRequest, reply) => {
-      const getUsersParamsSchema = z.object({
-        id: z.string().uuid(),
-      })
-
-      const { id } = getUsersParamsSchema.parse(request.params)
-
       const getUserSchema = z.object({
         id: z.string().uuid(),
       })
-
-      const { id: userId } = getUserSchema.parse(request.params)
-
-      if (id !== userId) {
-        reply.status(401).send()
-      }
+      const { id } = getUserSchema.parse(request.user)
 
       const user = await knex('users').select().where({ id })
 

@@ -14,7 +14,7 @@ export async function ensureAuth(request: CustomFastifyRequest) {
     throw Error('JWT Token not informed.')
   }
 
-  const [, token] = authHeader.split(' ')
+  const token = authHeader.split(' ')['1']
 
   try {
     const { sub: userId } = jwtPayloadSchema.parse(
@@ -24,7 +24,8 @@ export async function ensureAuth(request: CustomFastifyRequest) {
     request.user = {
       id: String(userId),
     }
-  } catch {
+  } catch (error) {
+    console.log(error)
     throw Error('Invalid JWT Token.')
   }
 }
