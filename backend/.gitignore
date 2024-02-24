@@ -1,6 +1,7 @@
 .env
 .env.test
 node_modules
+/test/*.png
 /src/database/*.db
 /tmp/*.png
 /tmp/uploads/*.png

@@ -158,27 +158,27 @@ export async function usersRoutes(app: FastifyInstance) {
     },
   )
 
-  app.delete(
-    '/',
-    { preHandler: [ensureAuth] },
-    async (request: CustomFastifyRequest, reply) => {
-      const getUserSchema = z.object({
-        id: z.string().uuid(),
-      })
+  // app.delete(
+  //   '/',
+  //   { preHandler: [ensureAuth] },
+  //   async (request: CustomFastifyRequest, reply) => {
+  //     const getUserSchema = z.object({
+  //       id: z.string().uuid(),
+  //     })
 
-      const { id } = getUserSchema.parse(request.user)
+  //     const { id } = getUserSchema.parse(request.user)
 
-      const user = await knex('users').select().where({ id })
+  //     const user = await knex('users').select().where({ id })
 
-      if (user.length === 0) {
-        throw Error('User not found.')
-      }
+  //     if (user.length === 0) {
+  //       throw Error('User not found.')
+  //     }
 
-      await knex('users').delete().where({ id })
+  //     await knex('users').delete().where({ id })
 
-      reply.status(200).send({
-        message: 'User deleted successfully.',
-      })
-    },
-  )
+  //     reply.status(200).send({
+  //       message: 'User deleted successfully.',
+  //     })
+  //   },
+  // )
 }
