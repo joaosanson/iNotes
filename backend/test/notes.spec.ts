@@ -2,7 +2,6 @@ import { describe, beforeAll, afterAll, beforeEach, it } from 'vitest'
 import { app } from '../src/app'
 import { execSync } from 'node:child_process'
 import request from 'supertest'
-import path from 'node:path'
 
 interface UserSchema {
   user: {
@@ -17,7 +16,7 @@ interface UserSchema {
   token: string
 }
 
-describe('Users routes', () => {
+describe('Notes routes', () => {
   beforeAll(async () => {
     await app.ready()
   })
@@ -31,18 +30,35 @@ describe('Users routes', () => {
     execSync('npm run knex migrate:latest')
   })
 
-  it('should be able to create a new user', async () => {
+  it('should be able create a note', async () => {
+    await request(app.server).post('/users').send({
+      name: 'john',
+      email: 'johndoe@email.com',
+      password: 'john123',
+    })
+
+    const userData = await request(app.server).post('/sessions').send({
+      email: 'johndoe@email.com',
+      password: 'john123',
+    })
+
+    const userDataResponse: UserSchema = JSON.parse(userData.text)
+
+    const { token } = userDataResponse
+
     await request(app.server)
-      .post('/users')
+      .post('/notes')
+      .set('Authorization', `bearer ${token}`)
       .send({
-        name: 'john',
-        email: 'johndoe@email.com',
-        password: 'john123',
+        title: 'test',
+        description: 'test',
+        tags: ['node', 'express'],
+        links: ['link1', 'link2'],
       })
       .expect(201)
   })
 
-  it('should be able to show the current user', async () => {
+  it('should be able show notes', async () => {
     await request(app.server).post('/users').send({
       name: 'john',
       email: 'johndoe@email.com',
@@ -59,62 +75,8 @@ describe('Users routes', () => {
     const { token } = userDataResponse
 
     await request(app.server)
-      .get('/users')
+      .get('/notes')
       .set('Authorization', `bearer ${token}`)
-      .expect(200)
-  })
-
-  it('should be able to change the password of current user', async () => {
-    await request(app.server).post('/users').send({
-      name: 'john',
-      email: 'johndoe@email.com',
-      password: 'john123',
-    })
-
-    const userData = await request(app.server).post('/sessions').send({
-      email: 'johndoe@email.com',
-      password: 'john123',
-    })
-
-    const userDataResponse: UserSchema = JSON.parse(userData.text)
-
-    const { token } = userDataResponse
-
-    await request(app.server)
-      .put('/users')
-      .set('Authorization', `bearer ${token}`)
-      .send({
-        name: 'john',
-        email: 'johndoe@email.com',
-        password: 'john1',
-        oldPassword: 'john123',
-      })
-      .expect(200)
-  })
-
-  it.skip('should be able to change user image', async () => {
-    await request(app.server).post('/users').send({
-      name: 'john',
-      email: 'johndoe@email.com',
-      password: 'john123',
-    })
-
-    const userData = await request(app.server).post('/sessions').send({
-      email: 'johndoe@email.com',
-      password: 'john123',
-    })
-
-    const userDataResponse: UserSchema = JSON.parse(userData.text)
-
-    const { token } = userDataResponse
-
-    const imgPath = `${path.resolve(__dirname, '..', 'test', 'Appearance.png')}`
-
-    await request(app.server)
-      .patch('/users/avatar')
-      .set('Authorization', `Bearer ${token}`)
-      .field('name', 'avatar')
-      .attach('file', imgPath)
       .expect(200)
   })
 })
