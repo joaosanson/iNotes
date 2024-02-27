@@ -1,4 +1,11 @@
-import { describe, beforeAll, afterAll, beforeEach, it } from 'vitest'
+import {
+  describe,
+  beforeAll,
+  afterAll,
+  beforeEach,
+  it,
+  afterEach,
+} from 'vitest'
 import { app } from '../src/app'
 import { execSync } from 'node:child_process'
 import request from 'supertest'
@@ -26,8 +33,11 @@ describe('Notes routes', () => {
   })
 
   beforeEach(() => {
-    execSync('npm run knex migrate:rollback --all')
     execSync('npm run knex migrate:latest')
+  })
+
+  afterEach(() => {
+    execSync('npm run knex migrate:rollback --all')
   })
 
   it('should be able create a note', async () => {
