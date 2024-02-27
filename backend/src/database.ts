@@ -9,7 +9,6 @@ export const config: Knex.Config = {
   },
   useNullAsDefault: true,
   pool: {
-    // @ts-expect-error no way of typing cb
     afterCreate: (conn: Database, cb) =>
       conn.run('PRAGMA foreign_keys = ON', cb),
   },

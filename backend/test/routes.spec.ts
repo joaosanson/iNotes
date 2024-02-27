@@ -29,10 +29,6 @@ describe('Users routes', () => {
     await app.ready()
   })
 
-  afterAll(async () => {
-    await app.close()
-  })
-
   beforeEach(() => {
     execSync('npm run knex migrate:latest')
   })
@@ -125,6 +121,70 @@ describe('Users routes', () => {
       .set('Authorization', `Bearer ${token}`)
       .field('name', 'avatar')
       .attach('file', imgPath)
+      .expect(200)
+  })
+})
+
+describe('Notes routes', () => {
+  afterAll(async () => {
+    await app.close()
+  })
+
+  beforeEach(() => {
+    execSync('npm run knex migrate:latest')
+  })
+
+  afterEach(() => {
+    execSync('npm run knex -- migrate:rollback --all')
+  })
+
+  it('should be able create a note', async () => {
+    await request(app.server).post('/users').send({
+      name: 'john',
+      email: 'johndoe@email.com',
+      password: 'john123',
+    })
+
+    const userData = await request(app.server).post('/sessions').send({
+      email: 'johndoe@email.com',
+      password: 'john123',
+    })
+
+    const userDataResponse: UserSchema = JSON.parse(userData.text)
+
+    const { token } = userDataResponse
+
+    await request(app.server)
+      .post('/notes')
+      .set('Authorization', `bearer ${token}`)
+      .send({
+        title: 'test',
+        description: 'test',
+        tags: ['node', 'express'],
+        links: ['link1', 'link2'],
+      })
+      .expect(201)
+  })
+
+  it('should be able show notes', async () => {
+    await request(app.server).post('/users').send({
+      name: 'john',
+      email: 'johndoe@email.com',
+      password: 'john123',
+    })
+
+    const userData = await request(app.server).post('/sessions').send({
+      email: 'johndoe@email.com',
+      password: 'john123',
+    })
+
+    const userDataResponse: UserSchema = JSON.parse(userData.text)
+
+    const { token } = userDataResponse
+
+    await request(app.server)
+      .get('/notes')
+      .set('Authorization', `bearer ${token}`)
       .expect(200)
   })
 })
