@@ -24,19 +24,23 @@ interface UserSchema {
   token: string
 }
 
+beforeAll(async () => {
+  await app.ready()
+})
+
+beforeEach(() => {
+  execSync('npm run knex migrate:latest')
+})
+
+afterEach(() => {
+  execSync('npm run knex migrate:rollback --all')
+})
+
+afterAll(async () => {
+  await app.close()
+})
+
 describe('Users routes', () => {
-  beforeAll(async () => {
-    await app.ready()
-  })
-
-  beforeEach(() => {
-    execSync('npm run knex migrate:latest')
-  })
-
-  afterEach(() => {
-    execSync('npm run knex migrate:rollback --all')
-  })
-
   it('should be able to create a new user', async () => {
     await request(app.server)
       .post('/users')
@@ -126,22 +130,6 @@ describe('Users routes', () => {
 })
 
 describe('Notes routes', () => {
-  beforeAll(async () => {
-    await app.ready()
-  })
-
-  afterAll(async () => {
-    await app.close()
-  })
-
-  beforeEach(() => {
-    execSync('npm run knex migrate:latest')
-  })
-
-  afterEach(() => {
-    execSync('npm run knex migrate:rollback --all')
-  })
-
   it('should be able create a note', async () => {
     await request(app.server).post('/users').send({
       name: 'john',
@@ -227,6 +215,45 @@ describe('Notes routes', () => {
     const [note] = JSON.parse(notesResponse)
     await request(app.server)
       .get(`/notes/${note.id}`)
+      .set('Authorization', `bearer ${token}`)
+      .expect(200)
+  })
+
+  it('should be able to delete notes', async () => {
+    await request(app.server).post('/users').send({
+      name: 'john',
+      email: 'johndoe@email.com',
+      password: 'john123',
+    })
+
+    const userData = await request(app.server).post('/sessions').send({
+      email: 'johndoe@email.com',
+      password: 'john123',
+    })
+
+    const userDataResponse: UserSchema = JSON.parse(userData.text)
+
+    const { token } = userDataResponse
+
+    await request(app.server)
+      .post(`/notes`)
+      .set('Authorization', `bearer ${token}`)
+      .send({
+        title: 'test',
+        description: 'test',
+        tags: ['node', 'express'],
+        links: ['link1', 'link2'],
+      })
+
+    const noteData = await request(app.server)
+      .get('/notes')
+      .set('Authorization', `bearer ${token}`)
+      .expect(200)
+
+    const notesResponse = noteData.text
+    const [note] = JSON.parse(notesResponse)
+    await request(app.server)
+      .delete(`/notes/${note.id}`)
       .set('Authorization', `bearer ${token}`)
       .expect(200)
   })
