@@ -9,8 +9,10 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "knex": "node --no-warnings --import tsx ./node_modules/knex/bin/cli.js",
-    "lint": "eslint src --ext .ts --fix",
-    "test": "vitest --silent=false"
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
+    "test": "vitest --silent=false",
+    "build": "tsc"
   },
   "author": "João Sanson",
   "license": "ISC",
